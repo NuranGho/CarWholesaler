@@ -1,0 +1,27 @@
+[
+    {
+        "fname": "Ginni",
+        "lname": "Rometty",
+        "email": "grometty@nyit.edu",
+        "password": "hello",
+        "position": "Wholesale Manager",
+        "location": "NA"
+    },
+    {
+        "fname": "Satya",
+        "lname": "Nadella",
+        "email": "snadella@nyit.edu",
+        "password": "hello",
+        "position": "Local Manager",
+        "location": "D1"
+        
+    },
+    {
+        "fname": "Mark",
+        "lname": "Zuckerberg",
+        "email": "mzuckerberg@nyit.edu",
+        "password": "hello",
+        "position": "Local Manager",
+        "location": "D2"
+    }
+]
