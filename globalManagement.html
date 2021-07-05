@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Wholesaler Account">
+    <title>All Sales Personnel</title>
+    <link rel="icon" type="image/png" href="images/caricon.png">
+    <link rel="stylesheet" type=text/css href="styles/main.css">
+    <link rel="stylesheet" type="text/css" href="styles/bootstrap4/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="styles/util.css">
+    <link rel="stylesheet" type="text/css" href="styles/style.css">
+    <link rel="stylesheet" type="text/css" href="styles/table.css">
+</head>
+
+<body>
+    <?php session_start(); ?>
+
+    <header>
+        <div id="logo"><a><img src="images/logo.png"></a></div>
+        <nav>
+            <ul>
+                <?php
+                    if(isset($_SESSION['customer']))
+                    {
+                        echo '<li><a href="logout.php">Logout</a></li>';
+                        echo '<li><a href="custAccount.html" style=text-decoration:none;>Welcome ' . $_SESSION['fname'] . '</a></li>';
+                    } else if(isset($_SESSION['wsmanager']) || isset($_SESSION['ldmanager1']) || isset($_SESSION['ldmanager2']) ||                    isset($_SESSION['salesrep1']) || isset($_SESSION['salesrep2']))
+                    {
+                        echo '<li><a href="logout.php">Logout</a></li>';
+                        echo '<li><a href="empAccount.html" style=text-decoration:none;>Welcome ' . $_SESSION['fname'] . '</a></li>';
+                    } else
+                    {
+                        echo '<li>';
+                            echo '<a style=color:red;>Sign In</a>';
+                                echo '<ul class="dropdown">';
+                                    echo '<li><a href="signIn.html">Customers</a></li>';
+                                    echo '<li><a href="empSignin.html">Employees</a></li>';
+                                echo '</ul>';
+                        echo '</li>';
+                        echo '<li><a href="registerPage.html">Register</a></li>';
+                    }
+                ?>
+                <li><a>|</a></li>
+                <li><a href="tabVehicles.html">Vehicles</a></li>
+                <li><a href="tabPackages.html">Packages</a></li>
+                <li><a href="tabRebates.html">Rebates</a></li>
+                <li><a href="index.html">Home</a></li>
+            </ul>
+        </nav>
+
+        <div class="services">
+            <div class="container">
+                <div class="row">
+                    <div class="col text-center">
+                        <div class="section_title">View All Representatives</div>
+                        <div class="section_subtitle">It's all in the tables</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cars in the database for dealer -->
+    <?php
+        if(isset($_SESSION['wsmanager']))
+        {
+            $dbconnect = mysqli_connect("127.0.0.1", "root", "", "globalviews");
+            $query = "SELECT * FROM salesperson INNER JOIN employee ON salesperson.rep_no = employee.emp_no";
+        }
+
+        $output = $dbconnect->query($query);
+
+        //Find the warehouse with the most cars
+        $query1 = "SELECT `dealer`, COUNT(`dealer`) AS `value_occurrence` FROM `salesperson` GROUP BY `dealer` ORDER BY
+                    `value_occurrence` DESC LIMIT 1";
+        $output1 = $dbconnect->query($query1);
+
+        if(!empty($output1))
+        {
+            while($result = mysqli_fetch_assoc($output1))
+            {
+                $dealer = $result['dealer'];
+            }
+        }
+
+        //Find the top N most popular column input
+        if(isset($_POST['top']) && isset($_POST['column']))
+        {
+            $top = $_POST['top'];
+            $column = $_POST['column'];
+
+            $query2 = "SELECT `name` FROM (SELECT employee.name, salesperson.base_salary, salesperson.comm, salesperson.ytd_sales
+                        FROM salesperson INNER JOIN employee ON salesperson.rep_no = employee.emp_no) AS T
+                        ORDER BY `$column` DESC LIMIT $top";
+
+            $output2 = $dbconnect->query($query2);
+
+            $popular = "";
+
+            if(!empty($output2))
+            {
+                while($result = mysqli_fetch_assoc($output2))
+                {
+
+                    $popular .= $result['name'] . " - ";
+                }
+            }
+        }
+    ?>
+
+    <div class="limiter">
+        <div class="container-table100">
+            <div class="wrap-table100">
+                <?php if($output->num_rows != 0){ ?>
+                <span class="login100-form-title" style="text-align:center;padding:0px;">Dealership with the most sales personnel:
+                    <?php echo $dealer?></span>
+
+                <br>
+                <form method="POST" style="text-align: center">
+                    <div style="width:30%;display:inline-block" class="wrap-input100">
+                        <input class="input100" type="text" name="top" maxlength="2" placeholder="Return top N popular">
+                        <span class="focus-input100-1"></span>
+                        <span class="focus-input100-2"></span>
+                    </div>
+
+                    <select style="width:30%;display:inline-block" class="wrap-input100" name="column">
+                        <option value="" disabled selected>Select Column</option>
+                        <option value="base_salary">Base Salary</option>
+                        <option value="comm">Commission</option>
+                        <option value="ytd_sales">Year-to-Date Sales</option>
+                        <span class="focus-input100-1"></span>
+                        <span class="focus-input100-2"></span>
+                    </select>
+
+                    <input style="padding: 10px;" type="submit" name="submit" value="Submit" class="btn-submit">
+
+                    <?php if(isset($output2)){ ?>
+                        <br>
+                        <span class="login100-form-title" style="text-align:center;"><?php echo " - " . $popular?>
+                        </span>
+                    <?php } ?>
+                </form>
+                <br>
+
+                <div class="table100 ver2 m-b-110">
+                    <div class="table100-head">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="cell100 column1">Representative No.</th>
+                                    <th class="cell100 column2">Name</th>
+                                    <th class="cell100 column3">Address</th>
+                                    <th class="cell100 column4">Phone</th>
+                                    <th class="cell100 column5">Base Salary</th>
+                                    <th class="cell100 column6">Year-to-Date Sales</th>
+                                    <th class="cell100 column7">Commission</th>
+                                    <th class="cell100 column8">Dealership</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <div class="table100-body js-pscroll ps ps--active-y">
+                        <table>
+                            <tbody>
+                                <?php while($result = mysqli_fetch_assoc($output)){ ?>
+                                    <tr>
+                                        <td class="cell100 column1"><?php echo $result['rep_no']?></td>
+                                        <td class="cell100 column2"><?php echo $result['name']?></td>
+                                        <td class="cell100 column3"><?php echo $result['address']?></td>
+                                        <td class="cell100 column4"><?php echo $result['phone']?></td>
+                                        <td class="cell100 column5"><?php echo $result['base_salary']?></td>
+                                        <td class="cell100 column6"><?php echo $result['ytd_sales']?></td>
+                                        <td class="cell100 column7"><?php echo $result['comm']?></td>
+                                        <td class="cell100 column8"><?php echo $result['dealer']?></td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <?php } else { ?>
+                    <section>
+                        <h1 id="page_title">No Vehicles Available</h1>
+                    </section>
+                <?php } ?>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <h3>All Rights Reserved, Copyright &copy; 2020</h3>
+    </footer>
+</body>
+</html>
